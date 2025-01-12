@@ -37,7 +37,19 @@
 #include "c_functions.h"
 
 void adaptive_picard_chebyshev(double* r0,double* v0, double t0, double tf, double dt, double deg, double tol, int soln_size, double* Feval, double* Soln){
-
+  // Print the solution array
+  // Print the solution array
+    printf("Solution Array (Soln):\n");
+    for (int i = 0; i < soln_size; i++) {
+        printf("Soln[%d]: [%12.12lf, %12.12lf, %12.12lf, %12.12lf, %12.12lf, %12.12lf]\n",
+               i,
+               Soln[i * 6 + 0],  // X Position
+               Soln[i * 6 + 1],  // Y Position
+               Soln[i * 6 + 2],  // Z Position
+               Soln[i * 6 + 3],  // X Velocity
+               Soln[i * 6 + 4],  // Y Velocity
+               Soln[i * 6 + 5]); // Z Velocity
+    }
   /* 1. DETERMINE DEGREE/SEGMENTATION SCHEME
   Compute the polynomial degree and number of segments per orbit that will
   result in a solution that satisfies the user specified tolerance. */

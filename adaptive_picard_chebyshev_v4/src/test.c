@@ -16,10 +16,10 @@ int main() {
     int num_rows = 0;
 
     // Arrays for storing data
-    double times[513];  // Adjust size as needed
-    double initial_positions[513][3];
-    double initial_velocities[513][3];
-    double final_positions[513][3];
+    double times[89791];  // Adjust size as needed
+    double initial_positions[89791][3];
+    double initial_velocities[89791][3];
+    double final_positions[89791][3];
 
     // Open the CSV file for reading
     FILE* csv_file = fopen("sgp4_results.csv", "r");
@@ -58,12 +58,22 @@ int main() {
     double t0 = 0.0;        // Initial Time (s)
     double dt;              // Time step based on CSV file data
     double deg = 70.0;      // Gravity Degree (max 100)
-    double tol = 1.0e-6;    // Tolerance
+    double tol = 1.0e-15;    // Tolerance
 
     // Initialize Output Variables
     double* Soln;
     int soln_size;
     double Feval[2] = { 0.0 };
+
+    // declare the initial position
+    double y0[3];
+    memcpy(y0, initial_positions[1], 3 * sizeof(double));
+    printf("y0=%12lf\n", y0[0]);
+
+    //declare the initial velocity
+    double v0[3];
+    memcpy(v0, initial_velocities[1], 3 * sizeof(double));
+    printf("v0=%12lf\n", v0[0]);
 
     // Open the CSV file for writing the APC results
     FILE* output_csv = fopen("apc_results.csv", "w");
@@ -105,10 +115,25 @@ int main() {
         // Allocate memory for the solution
         Soln = calloc(soln_size * 6, sizeof(double));  // Position (km) & Velocity (km/s)
 
+        printf("t0=%lf\n", t0);
+        printf("dt=%lf\n", dt);
+        printf("tf=%lf\n", tf);
+
         // Call APC for the current satellite data
         adaptive_picard_chebyshev(initial_positions[i], initial_velocities[i], t0, tf, dt, deg, tol, soln_size, Feval, Soln);
+        printf("Solution Array (Soln):\n");
+        for (int i = 0; i < soln_size; i++) {
+            printf("Soln[%d]: [%12.12lf, %12.12lf, %12.12lf, %12.12lf, %12.12lf, %12.12lf]\n",
+                   i,
+                   Soln[i * 6 + 0],  // X Position
+                   Soln[i * 6 + 1],  // Y Position
+                   Soln[i * 6 + 2],  // Z Position
+                   Soln[i * 6 + 3],  // X Velocity
+                   Soln[i * 6 + 4],  // Y Velocity
+                   Soln[i * 6 + 5]); // Z Velocity
+        }
 
-        // Extract the final position from the last row (correct indices for position)
+        // Extract the final position from the last row (corSrect indices for position)
         double apc_final_position[3] = {
                 Soln[ID2(soln_size, 1, soln_size)],  // X position at final time
                 Soln[ID2(soln_size, 2, soln_size)],  // Y position at final time
@@ -132,7 +157,7 @@ int main() {
         printf("Position Difference (Error) at Time %lf s: %lf km\n", tf, error);
 
         // Write the time and error to the output CSV file
-        fprintf(output_csv, "%lf,%lf\n", tf, error);
+        fprintf(output_csv, "%12lf,%12lf\n", tf, error);
         fflush(output_csv);  // Ensure each result is written immediately
 
         // Write the final position to the final_positions_results.csv file
